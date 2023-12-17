@@ -1,7 +1,6 @@
 import http.server
 from prometheus_client import start_http_server, Counter, Gauge
 from random import random
-from time import time, sleep
 
 
 TOTAL_REQUESTS = Counter(
@@ -25,18 +24,16 @@ LAST = Gauge(
 
 
 class MyHandler(http.server.BaseHTTPRequestHandler):
+    @IN_PROGRESS.track_inprogress()
     @TOTAL_EXCEPTIONS.count_exceptions()
     def do_GET(self):
         TOTAL_REQUESTS.inc()
         if random() < 0.2:
             raise Exception
-        IN_PROGRESS.inc()
-        sleep(random() * 10)
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"Hello World - No CI 7")
-        LAST.set(time())
-        IN_PROGRESS.dec()
+        LAST.set_to_current_time()
 
 
 if __name__ == "__main__":
