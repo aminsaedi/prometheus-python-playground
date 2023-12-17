@@ -1,16 +1,12 @@
 import http.server
-from prometheus_client import start_http_server, Counter, Gauge
-from random import random
+from prometheus_client import start_http_server, Counter, Gauge, Summary
+import time
 
 
 TOTAL_REQUESTS = Counter(
     "hello_worlds_total", "Hello Worlds requested of the HTTP server."
 )
 
-TOTAL_EXCEPTIONS = Counter(
-    "hello_worlds_exceptions_total",
-    "Exceptions serving Hello World.",
-)
 
 IN_PROGRESS = Gauge(
     "hello_worlds_in_progress",
@@ -22,17 +18,21 @@ LAST = Gauge(
     "The last time a Hello World was served.",
 )
 
+LATENCY = Summary(
+    "hello_worlds_latency_seconds",
+    "Time for a request Hello World.",
+)
+
 
 class MyHandler(http.server.BaseHTTPRequestHandler):
     @IN_PROGRESS.track_inprogress()
-    @TOTAL_EXCEPTIONS.count_exceptions()
     def do_GET(self):
+        start = time.time()
         TOTAL_REQUESTS.inc()
-        if random() < 0.2:
-            raise Exception
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"Hello World - No CI 7")
+        LATENCY.observe(time.time() - start)
         LAST.set_to_current_time()
 
 
