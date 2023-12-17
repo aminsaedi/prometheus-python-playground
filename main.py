@@ -10,7 +10,6 @@ TOTAL_REQUESTS = Counter(
 TOTAL_EXCEPTIONS = Counter(
     "hello_worlds_exceptions_total",
     "Exceptions serving Hello World.",
-    ["exception"],
 )
 
 
