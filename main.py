@@ -1,9 +1,25 @@
 import http.server
-from prometheus_client import start_http_server
+from prometheus_client import start_http_server, Counter
+from random import random
+
+
+TOTAL_REQUESTS = Counter(
+    "hello_worlds_total", "Hello Worlds requested of the HTTP server."
+)
+
+TOTAL_EXCEPTIONS = Counter(
+    "hello_worlds_exceptions_total",
+    "Exceptions serving Hello World.",
+    ["exception"],
+)
 
 
 class MyHandler(http.server.BaseHTTPRequestHandler):
+    @TOTAL_EXCEPTIONS.count_exceptions()
     def do_GET(self):
+        TOTAL_REQUESTS.inc()
+        if random() < 0.2:
+            raise Exception
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"Hello World - No CI 7")
